@@ -81,6 +81,7 @@ function verifyPassword(inputPassword) {
     const sessionPassword = localStorage.getItem(SESSION_KEYS.PASSWORD_HASH);
     return inputPassword === sessionPassword;
 }
+window.verifyPassword = verifyPassword;
 
 // Role Validations
 const ROLES = {

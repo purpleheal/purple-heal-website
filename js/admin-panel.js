@@ -357,7 +357,7 @@ function renderArtistsList(artists) {
 function deleteArtist(index) {
     showDeleteModal(async () => {
         try {
-            const artists = currentArtists || await loadArtists();
+            const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
             artists.splice(index, 1);
             await saveArtists(artists);
             showToast('Artista eliminado de la nube.');
@@ -881,7 +881,7 @@ window.scrollCarousel = function (id, amount) {
 // Delete album
 function deleteAlbum(artistIndex, albumIndex) {
     showDeleteModal(async () => {
-        const artists = currentArtists || await loadArtists();
+        const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
         artists[artistIndex].albums.splice(albumIndex, 1);
         await saveArtists(artists);
         showToast('Album eliminado y cambios publicados.');
@@ -892,7 +892,7 @@ function deleteAlbum(artistIndex, albumIndex) {
 // Delete merch
 function deleteMerch(artistIndex, productIndex) {
     showDeleteModal(async () => {
-        const artists = currentArtists || await loadArtists();
+        const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
         artists[artistIndex].merch.splice(productIndex, 1);
         await saveArtists(artists);
         showToast('Producto eliminado y cambios publicados.');
@@ -934,7 +934,7 @@ function showDeleteModal(onConfirm) {
 
     freshConfirm.addEventListener('click', () => {
         const pwd = input.value;
-        if (typeof verifyPassword === 'function' && verifyPassword(pwd)) {
+        if (typeof window.verifyPassword === 'function' && window.verifyPassword(pwd)) {
             modal.style.display = 'none';
             if (pendingDeleteCallback) pendingDeleteCallback();
         } else {
