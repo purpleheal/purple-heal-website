@@ -195,16 +195,26 @@ async function saveArtists(artists) {
 
 async function loadArtists() {
     try {
-        console.log('☁️ Loading artists from Cloud CMS...');
-        const artists = await ContentManager.getArtists();
+        console.log('☁️ Loading artists using DB layer for caching...');
+        let artists = [];
+        if (typeof loadArtistsDB === 'function') {
+            artists = await loadArtistsDB();
+            
+            // Sync edge case: If DB returns empty but GitHub has data
+            if (!artists || artists.length === 0) {
+                 artists = await ContentManager.getArtists();
+                 if (typeof window.saveArtistsDB === 'function' && artists.length > 0) {
+                     await window.saveArtistsDB(artists);
+                 }
+            }
+        } else {
+            artists = await ContentManager.getArtists();
+        }
         console.log('✅ Artists loaded:', artists?.length || 0);
 
         // Update local cache
         currentArtists = artists || [];
         window.currentArtists = currentArtists;
-        if (typeof window.saveArtistsDB === 'function') {
-            await window.saveArtistsDB(currentArtists);
-        }
 
         return currentArtists;
     } catch (error) {
@@ -1741,8 +1751,23 @@ async function saveMerchForm(event) {
 
 async function loadTours() {
     try {
-        console.log('☁️ Loading tours from Cloud...');
-        const tours = await ContentManager.getTours();
+        console.log('☁️ Loading tours using DB layer for caching...');
+        let tours = [];
+        if (typeof getAllToursDB === 'function') {
+            tours = await getAllToursDB();
+            
+            // Sync edge case: If DB returns empty but GitHub has data
+            if (!tours || tours.length === 0) {
+                 tours = await ContentManager.getTours();
+                 if (typeof window.saveTourDB === 'function' && tours.length > 0) {
+                     for(let t of tours) {
+                         await window.saveTourDB(t);
+                     }
+                 }
+            }
+        } else {
+            tours = await ContentManager.getTours();
+        }
         return tours || [];
     } catch (error) {
         console.error('❌ Error loading tours:', error);
