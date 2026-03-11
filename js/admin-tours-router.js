@@ -529,3 +529,16 @@ async function deleteTour(id) {
         }
     }
 }
+
+// FORCE EXPORT ROUTING & UI ACTIONS
+window.navigateToEdit = navigateToEdit;
+window.navigateToCreate = navigateToCreate;
+window.navigateToList = navigateToList;
+window.previewTourCover = previewTourCover;
+window.toggleTicketLink = toggleTicketLink;
+window.addTourDate = addTourDate;
+window.editDateInList = editDateInList;
+window.cancelDateEdit = cancelDateEdit;
+window.removeTourDate = removeTourDate;
+window.deleteTour = deleteTour;
+window.initToursPage = initToursPage;
