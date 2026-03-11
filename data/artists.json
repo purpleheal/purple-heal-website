@@ -36,6 +36,18 @@
         "stock": "EN STOCK",
         "link": "",
         "images": []
+      },
+      {
+        "name": "fedeas",
+        "category": "Sudadera",
+        "price": 4232,
+        "description": "asfaqwr",
+        "sizes": "xl",
+        "stock": "EN STOCK",
+        "link": "https://www.youtube.com/watch?v=qlgs_SWLQrM",
+        "images": [
+          "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/merch/r-n-boi-fedeas-0-1773211593053.jpg"
+        ]
       }
     ],
     "latestVideoId": "s9hBQrB4nG8",
