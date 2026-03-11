@@ -73,6 +73,22 @@ const GithubSync = {
         return { sha: data.sha }; // Return object with SHA for consistency
     },
 
+    getFile: async (path) => {
+        const token = GithubSync.getToken();
+        const config = GithubSync.getConfig();
+        const branch = config.BRANCH || 'master';
+        const url = `https://api.github.com/repos/${config.OWNER}/${config.REPO}/contents/${path}?ref=${branch}`;
+
+        const headers = { 'Accept': 'application/vnd.github.v3+json' };
+        if (token) headers['Authorization'] = `token ${token}`;
+
+        const response = await fetch(url, { headers });
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error(`GitHub API Error: ${response.statusText}`);
+
+        return await response.json();
+    },
+
     uploadFile: async (path, content, message, isBinary = false) => {
         const token = GithubSync.getToken();
         const config = GithubSync.getConfig();

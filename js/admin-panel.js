@@ -156,11 +156,17 @@ window.publishChanges = publishChanges;
 
 
 // Storage functions - Using IndexedDB for unlimited storage
+// Storage functions - Using IndexedDB for unlimited storage
+let currentArtists = []; // Local state cache
+
 async function saveArtists(artists) {
     try {
         console.log('☁️ Saving artists to Cloud CMS...');
         await ContentManager.saveArtists(artists);
-        console.log('✅ Artists saved to Cloud!');
+
+        // Update local cache immediately
+        currentArtists = artists;
+        console.log('✅ Artists saved to Cloud & Local Cache updated!');
 
         // Auto-publish to GitHub Pages
         try {
@@ -187,7 +193,11 @@ async function loadArtists() {
         console.log('☁️ Loading artists from Cloud CMS...');
         const artists = await ContentManager.getArtists();
         console.log('✅ Artists loaded:', artists?.length || 0);
-        return artists || [];
+
+        // Update local cache
+        currentArtists = artists || [];
+
+        return currentArtists;
     } catch (error) {
         console.error('❌ Error loading artists:', error);
         return [];
@@ -451,8 +461,15 @@ async function handleAddArtist(event) {
 }
 
 // Edit artist
+// Edit artist
 async function editArtist(index) {
-    const artists = await loadArtists();
+    let artists = currentArtists;
+
+    // If cache empty, load it
+    if (!artists || artists.length === 0) {
+        artists = await loadArtists();
+    }
+
     const artist = artists[index];
 
     // Show artist profile view
@@ -940,7 +957,8 @@ let tempAlbumImages = [];
 
 
 async function showAlbumForm(artistIndex, albumIndex) {
-    const artists = await loadArtists();
+    // Use local cache Instead of fetching stale data
+    const artists = currentArtists;
     const artist = artists[artistIndex];
 
     // Initialize albums array if it doesn't exist
@@ -1105,7 +1123,8 @@ async function showAlbumForm(artistIndex, albumIndex) {
 }
 
 async function closeAlbumView() {
-    const artists = await loadArtists();
+    // Use local cache instead of fetching stale data from GitHub
+    const artists = currentArtists;
     const form = document.getElementById('album-form');
     const artistIndex = parseInt(form.dataset.artistIndex);
 
@@ -1257,7 +1276,8 @@ async function saveAlbumForm(event) {
             throw new Error('Falta imagen');
         }
 
-        const artists = await loadArtists();
+        // Use local cache instead of fetching stale data
+        const artists = currentArtists;
         const artist = artists[artistIndex];
 
         // PROCESS IMAGES
@@ -1328,7 +1348,8 @@ async function saveAlbumForm(event) {
 let tempMerchImages = [];
 
 async function showMerchForm(artistIndex, merchIndex) {
-    const artists = await loadArtists();
+    // Use local cache Instead of fetching stale data
+    const artists = currentArtists;
     const artist = artists[artistIndex];
 
     // Initialize merch array if it doesn't exist
@@ -1500,7 +1521,8 @@ async function showMerchForm(artistIndex, merchIndex) {
 }
 
 async function closeMerchView() {
-    const artists = await loadArtists();
+    // Use local cache instead of fetching stale data from GitHub
+    const artists = currentArtists;
     const form = document.getElementById('merch-form');
     const artistIndex = parseInt(form.dataset.artistIndex);
 
@@ -1629,7 +1651,8 @@ async function saveMerchForm(event) {
     submitBtn.disabled = true;
 
     try {
-        const artists = await loadArtists();
+        // Use local cache instead of fetching stale data
+        const artists = currentArtists;
         const artist = artists[artistIndex];
 
         // Collect form data
