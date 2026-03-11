@@ -372,6 +372,14 @@ async function handleTourSubmit(e) {
     // SAVE HANDLER
     try {
         const datesDeepCopy = JSON.parse(JSON.stringify(currentTourDates));
+        
+        // PROCESS IMAGE: Upload if it's new (Base64)
+        if (currentTourCover && currentTourCover.startsWith('data:image')) {
+            showFormMessage('Subiendo imagen del tour...', 'info');
+            // Upload to Github
+            const uploadedUrl = await window.ContentManager.uploadTourImage(title, currentTourCover);
+            currentTourCover = uploadedUrl;
+        }
 
         // Prepare Object
         const tourToSave = {
