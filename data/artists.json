@@ -31,13 +31,11 @@
         "name": "hehe2",
         "category": "Accesorio",
         "price": 10,
-        "description": "sdasda",
-        "sizes": "xl",
+        "description": "",
+        "sizes": "",
         "stock": "EN STOCK",
-        "link": "https://www.youtube.com/watch?v=rE-ud6yIiog",
-        "images": [
-          "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/merch/r-n-boi-hehe2-0-1773214553069.jpg"
-        ]
+        "link": "",
+        "images": []
       }
     ],
     "latestVideoId": "s9hBQrB4nG8",
