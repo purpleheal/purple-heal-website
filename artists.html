@@ -141,17 +141,11 @@
             if (!grid) return;
 
             try {
-                const url = `data/artists.json?t=${Date.now()}`;
-
-                console.log('☁️ Fetching artists from Cloud:', url);
-                const response = await fetch(url);
-
                 let artists = [];
-                if (response.ok) {
-                    artists = await response.json();
+                if (typeof loadArtistsDB === 'function') {
+                    artists = await loadArtistsDB();
                 } else {
-                    console.warn('Cloud fetch failed, trying local fallback...');
-                    if (typeof loadArtistsDB === 'function') artists = await loadArtistsDB();
+                    console.error('loadArtistsDB is missing.');
                 }
 
                 if (artists && artists.length > 0) {

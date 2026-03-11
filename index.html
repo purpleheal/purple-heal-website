@@ -322,20 +322,27 @@
         const timestamp = Date.now();
         const headers = { 'Cache-Control': 'no-cache' };
 
-        // Parallel Fetch: Config, Artists, Tours
-        const [configRes, artistsRes, toursRes] = await Promise.all([
-          fetch(`${BASE_URL}/site_config.json?t=${timestamp}`),
-          fetch(`${BASE_URL}/artists.json?t=${timestamp}`),
-          fetch(`${BASE_URL}/tours.json?t=${timestamp}`)
-        ]);
+        // Parallel Fetch: Config from API
+        const configRes = await fetch(`${BASE_URL}/site_config.json?t=${timestamp}`);
+        if (!configRes.ok) throw new Error('Failed to fetch config');
+        const config = await configRes.json();
 
-        if (!configRes.ok || !artistsRes.ok || !toursRes.ok) {
-          throw new Error('Failed to fetch one or more resources');
+        // Use DB layer for data (handles Admin Bypass and IDB seamlessly)
+        let artists = [];
+        if (typeof loadArtistsDB === 'function') {
+            artists = await loadArtistsDB();
+        } else {
+            const res = await fetch(`${BASE_URL}/artists.json?t=${timestamp}`);
+            if (res.ok) artists = await res.json();
         }
 
-        const config = await configRes.json();
-        const artists = await artistsRes.json();
-        const tours = await toursRes.json();
+        let tours = [];
+        if (typeof getAllToursDB === 'function') {
+            tours = await getAllToursDB();
+        } else {
+            const res = await fetch(`${BASE_URL}/tours.json?t=${timestamp}`);
+            if (res.ok) tours = await res.json();
+        }
 
         // 1. Render Artists
         renderArtists(artists);

@@ -102,13 +102,29 @@ async function loadArtistsDB() {
         const store = transaction.objectStore('artists');
         const request = store.getAll();
 
-        request.onsuccess = () => {
+        request.onsuccess = async () => {
             if (request.result && request.result.length > 0) {
                 console.log(`📦 Loaded ${request.result.length} artists from IndexedDB`);
                 resolve(request.result);
             } else {
-                console.log('📭 IndexedDB is empty.');
-                resolve([]);
+                console.log('📭 IndexedDB is empty. Fetching from cloud to initialize...');
+                try {
+                    // Bypass the admin check in fetchPublicData by doing a raw fetch
+                    const response = await fetch(`data/artists.json?t=${new Date().getTime()}`);
+                    if (response.ok) {
+                        const cloudData = await response.json();
+                        // Populate IDB for future use
+                        if (typeof saveArtistsDB === 'function' && cloudData.length > 0) {
+                            saveArtistsDB(cloudData).catch(err => console.error("Warn: Could not background save cloud data to IDB", err));
+                        }
+                        resolve(cloudData);
+                    } else {
+                        resolve([]);
+                    }
+                } catch (e) {
+                    console.error('Failed to fetch fallback from cloud:', e);
+                    resolve([]);
+                }
             }
         };
         request.onerror = () => reject(request.error);
@@ -171,38 +187,7 @@ async function saveArtistsDB(artists) {
     });
 }
 
-// Load all artists from IndexedDB
-async function loadArtistsDB() {
-    if (!db) await initDB();
-
-    return new Promise((resolve, reject) => {
-        const transaction = db.transaction([STORE_NAME], 'readonly');
-        const objectStore = transaction.objectStore(STORE_NAME);
-        const request = objectStore.getAll();
-
-        request.onsuccess = () => {
-            // getAll() returns artists in insertion order, which matches array indices
-            const artists = request.result || [];
-            console.log(`📥 loadArtistsDB: Loaded ${artists.length} artists from IndexedDB`);
-
-            // DEBUG: Check each artist for imageData
-            artists.forEach((artist, index) => {
-                console.log(`📥 Artist ${index} (${artist.name}):`, {
-                    hasImageData: !!artist.imageData,
-                    imageDataLength: artist.imageData ? artist.imageData.length : 0,
-                    imageDataStart: artist.imageData ? artist.imageData.substring(0, 30) : 'N/A'
-                });
-            });
-
-            resolve(artists);
-        };
-
-        request.onerror = () => {
-            console.error('Load error:', request.error);
-            reject(request.error);
-        };
-    });
-}
+// This duplicate loadArtistsDB block was removed because it overrode the correct implementation above that handles public data fetching.
 
 // Migrate data from localStorage to IndexedDB (ONE TIME ONLY)
 async function migrateFromLocalStorage() {
