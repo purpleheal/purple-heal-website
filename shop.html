@@ -229,7 +229,7 @@
                 let hasDiscount = false;
                 let discountPercent = 0;
 
-                if (config) {
+                if (config && config.showOffers === true) {
                     if (prod.type === 'album') {
                         discountPercent = parseInt(config.promoDiscountAlbum) || 0;
                     } else if (prod.type === 'merch') {

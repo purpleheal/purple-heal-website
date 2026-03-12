@@ -22,7 +22,7 @@ async function loadArtistProducts(artistId, injectedArtistData = null) {
     }
 
     // --- DISCOUNT LOGIC ---
-    const isPromoActive = config.showPromo === true;
+    const isPromoActive = config.showOffers === true; // FIXED: showOffers instead of showPromo
     const discountAlbum = parseInt(config.promoDiscountAlbum) || 0;
     const discountMerch = parseInt(config.promoDiscountMerch) || 0;
 
@@ -54,41 +54,36 @@ async function loadArtistProducts(artistId, injectedArtistData = null) {
                 const showSaleBadge = discount > 0;
 
                 // Price Calculation
-                const originalPrice = album.price ? parseInt(album.price) : 0;
+                const originalPrice = parseFloat(album.price || 0);
                 let finalPrice = originalPrice;
                 if (showSaleBadge && originalPrice > 0) {
-                    finalPrice = Math.floor(originalPrice * (1 - (discount / 100)));
+                    finalPrice = originalPrice * (1 - (discount / 100));
                 }
 
                 return `
-                <a href="product-detail.html?type=album&artist=${artistId}&index=${index}" style="text-decoration: none; color: inherit; display: block; max-width: 300px; margin: 0;">
-                    <div class="product-card fade-in" style="width: 100%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-purple); transition: transform 0.3s; cursor: pointer; ${showSaleBadge ? 'border: 1px solid var(--ph-blue-accent);' : ''}" 
-                         onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-                        
-                        <div class="product-card__image" style="aspect-ratio: 1/1; max-height: 300px; position: relative;">
-                            <img src="${firstImage}" alt="${album.title}" style="width: 100%; height: 100%; object-fit: cover;">
-                            ${showSaleBadge ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--ph-blue-accent); color: white; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">-${discount}%</div>` : ''}
-                        </div>
-                        
-                        <div class="product-card__content" style="padding: var(--space-lg);">
-                            <h3 style="font-size: 1.25rem; margin-bottom: var(--space-sm);">${album.title}</h3>
-                            <p class="product-card__meta" style="font-size: 0.875rem; margin-bottom: var(--space-xs); color: var(--ph-gray-lighter);">${displayDate} · ${album.type}</p>
-                            
-                            <!-- Price Display -->
-                            <div class="product-card__price" style="font-size: 1.125rem; font-weight: bold; color: var(--ph-purple); margin-bottom: var(--space-sm);">
-                                ${originalPrice > 0 ? (showSaleBadge ?
-                        `<span style="text-decoration: line-through; color: #666; margin-right: 10px; font-size: 0.9em;">$${originalPrice}</span>
-                                     <span style="color: var(--ph-blue-accent);">$${finalPrice}</span>`
-                        : `$${originalPrice}`)
-                        : 'Precio no disponible'}
-                            </div>
+                <div class="artist-card fade-in" style="cursor: default; min-width: 300px; margin-right: 20px;">
+                    <div style="position: relative; overflow: hidden; border-radius: 8px 8px 0 0;">
+                        <img src="${firstImage}" alt="${album.title}" class="artist-card__image" style="height: 300px; object-fit: cover; width: 100%;">
+                        ${showSaleBadge ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--ph-blue-accent); color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em;">-${discount}%</div>` : ''}
+                    </div>
+                    <div class="artist-card__overlay" style="background: rgba(20, 20, 23, 0.95); position: relative; transform: none; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,0.1); border-top: none;">
+                        <p class="artist-card__genre" style="color: var(--ph-purple-light); text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px;">
+                            ${displayDate} • ALBUM
+                        </p>
+                        <h3 class="artist-card__name" style="font-size: 1.2rem; margin: 5px 0 10px; font-family: var(--font-primary);">${album.title}</h3>
 
-                            <p style="color: var(--ph-purple-lighter); font-size: 0.875rem;">
-                                ${album.link ? 'Ver Detalles' : 'No disponible'}
-                            </p>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <div style="font-family: 'Oxanium'; font-weight: bold;">
+                                ${originalPrice > 0 ? (showSaleBadge ?
+                        `<span style="text-decoration: line-through; color: #666; font-size: 0.9em; margin-right: 8px;">$${originalPrice.toFixed(2)}</span>
+                                     <span style="color: var(--ph-blue-accent); font-size: 1.2rem;">$${finalPrice.toFixed(2)}</span>`
+                        : `<span style="color: white; font-size: 1.2rem;">$${originalPrice.toFixed(2)}</span>`)
+                        : '<span style="color: #666; font-size: 0.9em;">N/D</span>'}
+                            </div>
+                            <a href="product-detail.html?type=album&artist=${artistId}&index=${index}" class="ph-button ph-button--sm ph-button--primary">VER DETALLES</a>
                         </div>
                     </div>
-                </a>
+                </div>
                 `;
             }).join('');
         } else {
@@ -110,47 +105,39 @@ async function loadArtistProducts(artistId, injectedArtistData = null) {
                 const isSoldOut = product.stock === 'SOLD OUT';
 
                 // Price Calculation
-                const originalPrice = product.price ? parseInt(product.price) : 0;
+                const originalPrice = parseFloat(product.price || 0);
                 const discount = getDiscountPercent('merch');
                 const showSale = discount > 0 && !isSoldOut;
                 let finalPrice = originalPrice;
 
                 if (showSale && originalPrice > 0) {
-                    finalPrice = Math.floor(originalPrice * (1 - (discount / 100)));
+                    finalPrice = originalPrice * (1 - (discount / 100));
                 }
 
                 return `
-                <a href="product-detail.html?type=merch&artist=${artistId}&index=${index}" style="text-decoration: none; color: inherit; display: block; max-width: 300px; margin: 0;">
-                    <div class="product-card fade-in" style="width: 100%; border-radius: var(--radius-lg); overflow: hidden; box-shadow: var(--shadow-purple); transition: transform 0.3s; cursor: pointer; ${showSale ? 'border: 1px solid var(--ph-blue-accent);' : ''}"
-                         onmouseover="this.style.transform='translateY(-4px)'" onmouseout="this.style.transform='translateY(0)'">
-                        
-                        <div class="product-card__image" style="aspect-ratio: 1/1; max-height: 300px; position: relative;">
-                            <img src="${firstImage}" alt="${product.name}" style="width: 100%; height: 100%; object-fit: cover;">
-                            ${showSale ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--ph-blue-accent); color: white; font-weight: bold; padding: 4px 8px; border-radius: 4px; font-size: 0.8em; box-shadow: 0 2px 10px rgba(0,0,0,0.5);">-${discount}% OFF</div>` : ''}
-                        </div>
-                        
-                        <div class="product-card__content" style="padding: var(--space-lg);">
-                            <h3 style="font-size: 1.25rem; margin-bottom: var(--space-sm);">${product.name}</h3>
-                            <p style="color: var(--ph-gray-lighter); font-size: 0.875rem; margin-bottom: var(--space-sm);">
-                                ${product.category || 'Merchandising'}
-                            </p>
-                            
-                            <!-- Price Display -->
-                            <div class="product-card__price" style="font-size: 1.125rem; font-weight: bold; color: var(--ph-purple); margin-bottom: var(--space-sm);">
-                                ${originalPrice > 0 ? (showSale ?
-                        `<span style="text-decoration: line-through; color: #666; margin-right: 10px; font-size: 0.9em;">$${originalPrice}</span>
-                                     <span style="color: var(--ph-blue-accent);">$${finalPrice}</span>`
-                        : `$${originalPrice}`)
-                        : 'Precio no disponible'}
-                            </div>
+                <div class="artist-card fade-in" style="cursor: default; min-width: 300px; margin-right: 20px;">
+                    <div style="position: relative; overflow: hidden; border-radius: 8px 8px 0 0;">
+                        <img src="${firstImage}" alt="${product.name}" class="artist-card__image" style="height: 300px; object-fit: cover; width: 100%;">
+                        ${showSale ? `<div style="position: absolute; top: 10px; right: 10px; background: var(--ph-blue-accent); color: white; padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.9em;">-${discount}%</div>` : ''}
+                    </div>
+                    <div class="artist-card__overlay" style="background: rgba(20, 20, 23, 0.95); position: relative; transform: none; padding: 20px; border-radius: 0 0 8px 8px; border: 1px solid rgba(255,255,255,0.1); border-top: none;">
+                        <p class="artist-card__genre" style="color: var(--ph-purple-light); text-transform: uppercase; font-size: 0.8em; letter-spacing: 1px;">
+                            ${product.category || 'MERCH'} • ${isSoldOut ? 'AGOTADO' : 'EN STOCK'}
+                        </p>
+                        <h3 class="artist-card__name" style="font-size: 1.2rem; margin: 5px 0 10px; font-family: var(--font-primary);">${product.name}</h3>
 
-                            ${isSoldOut ?
-                        '<p style="color: #D6001C; font-weight: bold; font-size: 0.875rem;">SOLD OUT</p>' :
-                        '<p style="color: var(--ph-purple-lighter); font-size: 0.875rem;">En Stock</p>'
-                    }
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                            <div style="font-family: 'Oxanium'; font-weight: bold;">
+                                ${originalPrice > 0 ? (showSale ?
+                        `<span style="text-decoration: line-through; color: #666; font-size: 0.9em; margin-right: 8px;">$${originalPrice.toFixed(2)}</span>
+                                     <span style="color: var(--ph-blue-accent); font-size: 1.2rem;">$${finalPrice.toFixed(2)}</span>`
+                        : `<span style="color: white; font-size: 1.2rem;">$${originalPrice.toFixed(2)}</span>`)
+                        : '<span style="color: #666; font-size: 0.9em;">N/D</span>'}
+                            </div>
+                            <a href="product-detail.html?type=merch&artist=${artistId}&index=${index}" class="ph-button ph-button--sm ph-button--primary">VER DETALLES</a>
                         </div>
                     </div>
-                </a>
+                </div>
                 `;
             }).join('');
         } else {

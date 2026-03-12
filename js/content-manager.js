@@ -183,7 +183,7 @@ const ContentManager = {
         const config = window.GithubSync.getConfig();
         const url = `https://raw.githubusercontent.com/${config.OWNER}/${config.REPO}/${config.BRANCH}/${path}?t=${Date.now()}`;
         const res = await fetch(url);
-        if (!res.ok) return [];
+        if (!res.ok) return null;
         return await res.json();
     }
 };

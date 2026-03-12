@@ -241,6 +241,12 @@
     font-weight: bold;
 }
 
+.ph-button--sm {
+    padding: var(--space-xs) var(--space-lg);
+    font-size: var(--fs-xs) !important;
+    min-height: auto;
+}
+
 /* === GRID SYSTEM === */
 .grid {
     display: grid;
