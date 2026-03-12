@@ -3,7 +3,7 @@
   "showJoinSection": false,
   "showContact": false,
   "showStore": false,
-  "showOffers": false,
+  "showOffers": true,
   "promoTitle": "",
   "promoSubtitle": "",
   "promoDescription": "",
