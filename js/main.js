@@ -167,39 +167,45 @@ document.documentElement.classList.add('js-enabled');
 // ===== STORE VISIBILITY LOGIC =====
 async function checkStoreVisibility() {
     try {
-        // OPTIMIZATION: Fetch directly from GitHub Raw with Cache Busting
-        // This ensures the public site sees "Save" changes immediately
-        const REPO_OWNER = 'PurpleHeal-Entertainment';
-        const REPO_NAME = 'purple-heal-website';
-        const BRANCH = 'master'; // or main
-        const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/site_config.json?t=${Date.now()}`;
+        const OWNER = 'PurpleHeal-Entertainment';
+        const REPO = 'purple-heal-website';
+        const BRANCH = 'master';
+        const timestamp = Date.now();
 
-        const response = await fetch(url);
-        if (!response.ok) return;
+        // Use GitHub API for instant updates (bypass CDN cache)
+        const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/site_config.json?ref=${BRANCH}&t=${timestamp}`;
+        
+        let config = {};
+        try {
+            const apiRes = await fetch(apiUrl, {
+                headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (apiRes.ok) {
+                const data = await apiRes.json();
+                if (data && data.content) {
+                    // GitHub API content might have newlines, sanitize before atob
+                    const jsonString = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+                    config = JSON.parse(jsonString);
+                    console.log('✅ Store visibility loaded via API');
+                }
+            } else {
+                throw new Error('API failed');
+            }
+        } catch (e) {
+            console.warn('⚠️ GitHub API fail in main.js, falling back to raw URL');
+            const res = await fetch(`data/site_config.json?t=${timestamp}`);
+            if (res.ok) config = await res.json();
+        }
 
-        const config = await response.json();
-
-        const showStore = config.showStore || false;
+        const showStore = config.showStore === true;
         const navShop = document.getElementById('nav-shop');
         const navShopMobile = document.getElementById('nav-shop-mobile');
 
-        if (showStore) {
-            if (navShop) navShop.style.display = 'block';
-            if (navShopMobile) navShopMobile.style.display = 'block';
-        } else {
-            if (navShop) navShop.style.display = 'none';
-            if (navShopMobile) navShopMobile.style.display = 'none';
-        }
+        if (navShop) navShop.style.display = showStore ? 'inline-block' : 'none';
+        if (navShopMobile) navShopMobile.style.display = showStore ? 'block' : 'none';
 
     } catch (e) {
-        console.warn('Store visibility check failed (Cloud):', e);
-        // Fallback to local if fetch fails (Legacy)
-        if (typeof initDB === 'function' && typeof getSiteConfig === 'function') {
-            await initDB();
-            const config = await getSiteConfig();
-            if (config.showStore && document.getElementById('nav-shop'))
-                document.getElementById('nav-shop').style.display = 'block';
-        }
+        console.warn('Store visibility check failed:', e);
     }
 }
 

@@ -172,7 +172,7 @@ const ContentManager = {
             const data = await window.GithubSync.getFile(path);
             if (data && data.content) {
                 // Decode UTF8 properly
-                const jsonString = new TextDecoder().decode(Uint8Array.from(atob(data.content), c => c.charCodeAt(0)));
+                const jsonString = new TextDecoder().decode(Uint8Array.from(atob(data.content.replace(/\n/g, '')), c => c.charCodeAt(0)));
                 return JSON.parse(jsonString);
             }
         } catch (e) {

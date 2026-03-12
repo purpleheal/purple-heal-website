@@ -334,7 +334,7 @@
             if (apiRes.ok) {
                 const data = await apiRes.ok ? await apiRes.json() : null;
                 if (data && data.content) {
-                    config = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                    config = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
                     console.log('✅ Config loaded from GitHub API');
                 }
             } else {
@@ -365,7 +365,7 @@
             if (apiRes.ok) {
                 const data = await apiRes.json();
                 if (data && data.content) {
-                    tours = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                    tours = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
                     console.log('✅ Tours loaded from GitHub API');
                 }
             } else {

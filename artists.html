@@ -199,7 +199,7 @@
                     if (apiRes.ok) {
                         const data = await apiRes.json();
                         if (data && data.content) {
-                            config = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                            config = JSON.parse(decodeURIComponent(escape(atob(data.content.replace(/\n/g, '')))));
                             console.log('✅ Config loaded from GitHub API (Artists Page)');
                         }
                     } else {
