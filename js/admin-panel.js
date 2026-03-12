@@ -883,12 +883,19 @@ window.scrollCarousel = function (id, amount) {
 // Delete album
 function deleteAlbum(artistIndex, albumIndex) {
     showDeleteModal(async () => {
-        const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
-        artists[artistIndex].albums.splice(albumIndex, 1);
-        const success = await saveArtists(artists);
-        if (success) {
-            showToast('Album eliminado y cambios publicados.', 'success');
-            showArtistProfile(artists[artistIndex], artistIndex);
+        try {
+            const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
+            artists[artistIndex].albums.splice(albumIndex, 1);
+            const success = await saveArtists(artists);
+            if (success) {
+                showToast('Album eliminado y cambios publicados.', 'success');
+                showArtistProfile(artists[artistIndex], artistIndex);
+            } else {
+                showToast('No se pudo confirmar eliminación en la nube.', 'error');
+            }
+        } catch (e) {
+            console.error('Delete Album Error:', e);
+            showToast('Error fatal al eliminar album: ' + e.message, 'error');
         }
     });
 }
@@ -897,12 +904,19 @@ window.deleteAlbum = deleteAlbum;
 // Delete merch
 function deleteMerch(artistIndex, productIndex) {
     showDeleteModal(async () => {
-        const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
-        artists[artistIndex].merch.splice(productIndex, 1);
-        const success = await saveArtists(artists);
-        if (success) {
-            showToast('Producto eliminado y cambios publicados.', 'success');
-            showArtistProfile(artists[artistIndex], artistIndex);
+        try {
+            const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
+            artists[artistIndex].merch.splice(productIndex, 1);
+            const success = await saveArtists(artists);
+            if (success) {
+                showToast('Producto eliminado y cambios publicados.', 'success');
+                showArtistProfile(artists[artistIndex], artistIndex);
+            } else {
+                showToast('No se pudo confirmar eliminación en la nube.', 'error');
+            }
+        } catch (e) {
+            console.error('Delete Merch Error:', e);
+            showToast('Error fatal al eliminar producto: ' + e.message, 'error');
         }
     });
 }
