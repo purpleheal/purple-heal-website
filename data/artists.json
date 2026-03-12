@@ -52,7 +52,20 @@
         ]
       }
     ],
-    "merch": [],
+    "merch": [
+      {
+        "name": "123123",
+        "category": "Camiseta",
+        "price": 242,
+        "description": "fafafaf",
+        "sizes": "xl",
+        "stock": "EN STOCK",
+        "link": "https://www.youtube.com/watch?v=wII1KSo3gQs",
+        "images": [
+          "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/merch/erre-261-123123-0-1773300877130.jpg"
+        ]
+      }
+    ],
     "latestVideoId": "wII1KSo3gQs",
     "id": 1
   }
