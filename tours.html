@@ -237,23 +237,32 @@
             const container = document.getElementById('tours-container');
 
             try {
-                // OPTIMIZATION: Fetch directly from Cloud with Cache Busting
                 const REPO_OWNER = 'PurpleHeal-Entertainment';
                 const REPO_NAME = 'purple-heal-website';
                 const BRANCH = 'master';
-                const url = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/tours.json?t=${Date.now()}`;
-
-                console.log('☁️ Fetching tours from Cloud:', url);
-                const response = await fetch(url);
 
                 let tours = [];
-                if (response.ok) {
-                    tours = await response.json();
-                } else {
-                    console.warn('Cloud fetch failed, trying local fallback...');
-                    if (typeof getAllToursDB === 'function') {
-                        await initDB();
-                        tours = await getAllToursDB();
+
+                // PRIMARY: GitHub API (always fresh, no CDN delay)
+                try {
+                    const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/data/tours.json?ref=${BRANCH}&t=${Date.now()}`;
+                    const apiRes = await fetch(apiUrl, { headers: { 'Accept': 'application/vnd.github.v3+json' } });
+                    if (apiRes.ok) {
+                        const apiData = await apiRes.json();
+                        const jsonString = new TextDecoder().decode(Uint8Array.from(atob(apiData.content), c => c.charCodeAt(0)));
+                        tours = JSON.parse(jsonString);
+                        console.log('☁️ Tours loaded via API (instant)');
+                    } else {
+                        throw new Error('API returned ' + apiRes.status);
+                    }
+                } catch (apiErr) {
+                    // FALLBACK: Raw URL (may have CDN delay)
+                    console.warn('API fetch failed, trying raw URL...', apiErr.message);
+                    const rawUrl = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${BRANCH}/data/tours.json?t=${Date.now()}`;
+                    const rawRes = await fetch(rawUrl);
+                    if (rawRes.ok) {
+                        tours = await rawRes.json();
+                        console.log('☁️ Tours loaded via raw URL (may be cached)');
                     }
                 }
 
