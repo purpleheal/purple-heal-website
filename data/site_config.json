@@ -1,5 +1,5 @@
 {
-  "showStats": false,
+  "showStats": true,
   "showJoinSection": false,
   "showContact": false,
   "showStore": false,
@@ -13,15 +13,15 @@
   "backstageLink": "https://www.youtube.com/@purplehealent/featured",
   "stats": [
     {
-      "number": "123+",
+      "number": "8+",
       "label": "Artistas Talentosos"
     },
     {
-      "number": "2424+",
+      "number": "20+",
       "label": "Lanzamientos Musicales"
     },
     {
-      "number": "",
+      "number": "5k",
       "label": ""
     }
   ],
