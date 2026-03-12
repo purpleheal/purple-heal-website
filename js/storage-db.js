@@ -372,6 +372,8 @@ async function getSiteConfig() {
                 promoTitle: 'OFERTAS IMPERDIBLES',
                 promoSubtitle: 'EN MERCH SELECCIONADO',
                 promoDescription: 'Aprovecha descuentos exclusivos en productos de tus artistas favoritos.',
+                promoDiscountAlbum: "20",
+                promoDiscountMerch: "20",
                 stats: [
                     { number: '10+', label: 'Artistas Talentosos' },
                     { number: '50+', label: 'Lanzamientos Musicales' },

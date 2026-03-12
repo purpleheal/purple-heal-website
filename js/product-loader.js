@@ -22,7 +22,7 @@ async function loadArtistProducts(artistId, injectedArtistData = null) {
     }
 
     // --- DISCOUNT LOGIC ---
-    const isPromoActive = config.showOffers === true; // FIXED: showOffers instead of showPromo
+    const isPromoActive = config.showOffers === true || config.showOffers === 'true'; 
     const discountAlbum = parseInt(config.promoDiscountAlbum) || 0;
     const discountMerch = parseInt(config.promoDiscountMerch) || 0;
 
@@ -148,12 +148,11 @@ async function loadArtistProducts(artistId, injectedArtistData = null) {
             merchContainer.style.width = '100%';
             merchContainer.innerHTML = '<div style="text-align: center; color: var(--ph-gray-lighter); font-family: var(--font-alt);">No hay merchandising disponible</div>';
         }
-
-
-        // Setup Sliders
-        setupSlider('albumsGrid', 'prevAlbums', 'nextAlbums');
-        setupSlider('merchGrid', 'prevMerch', 'nextMerch');
     }
+
+    // Setup Sliders (always run after content population is triggered)
+    setupSlider('albumsGrid', 'prevAlbums', 'nextAlbums');
+    setupSlider('merchGrid', 'prevMerch', 'nextMerch');
 
     // Call when page loads
     window.loadArtistProducts = loadArtistProducts;
