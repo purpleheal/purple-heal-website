@@ -3,7 +3,7 @@
   "showJoinSection": true,
   "showContact": false,
   "showStore": false,
-  "showOffers": true,
+  "showOffers": false,
   "promoTitle": "OFERTAS DE VERANO",
   "promoSubtitle": "OFERTA EN ÁLBUMES Y MERCH",
   "promoDescription": "Los álbumes y merch de tus artistas favoritos ahora con descuento especial. Aprovecha esta oportunidad.",
