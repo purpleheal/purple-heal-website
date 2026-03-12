@@ -320,14 +320,33 @@
         console.log('☁️ Fetching homepage data from Cloud...');
 
         const timestamp = Date.now();
-        const headers = { 'Cache-Control': 'no-cache' };
+        const OWNER = 'PurpleHeal-Entertainment';
+        const REPO = 'purple-heal-website';
+        const BRANCH = 'master';
 
-        // Parallel Fetch: Config from API
-        const configRes = await fetch(`${BASE_URL}/site_config.json?t=${timestamp}`);
-        if (!configRes.ok) throw new Error('Failed to fetch config');
-        const config = await configRes.json();
+        // 1. Fetch Site Config (Try API first for instant updates)
+        let config = {};
+        try {
+            const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/site_config.json?ref=${BRANCH}`;
+            const apiRes = await fetch(apiUrl, {
+                headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (apiRes.ok) {
+                const data = await apiRes.ok ? await apiRes.json() : null;
+                if (data && data.content) {
+                    config = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                    console.log('✅ Config loaded from GitHub API');
+                }
+            } else {
+                throw new Error('API failed');
+            }
+        } catch (e) {
+            console.warn('⚠️ GitHub API fail, falling back to raw URL for config');
+            const res = await fetch(`${BASE_URL}/site_config.json?t=${timestamp}`);
+            if (res.ok) config = await res.json();
+        }
 
-        // Use DB layer for data (handles Admin Bypass and IDB seamlessly)
+        // 2. Load Artists (Usually doesn't change often, keep existing logic)
         let artists = [];
         if (typeof loadArtistsDB === 'function') {
             artists = await loadArtistsDB();
@@ -336,30 +355,39 @@
             if (res.ok) artists = await res.json();
         }
 
+        // 3. Load Tours (Try API first for instant featured tour updates)
         let tours = [];
-        if (typeof getAllToursDB === 'function') {
-            tours = await getAllToursDB();
-        } else {
+        try {
+            const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/tours.json?ref=${BRANCH}`;
+            const apiRes = await fetch(apiUrl, {
+                headers: { 'Accept': 'application/vnd.github.v3+json' }
+            });
+            if (apiRes.ok) {
+                const data = await apiRes.json();
+                if (data && data.content) {
+                    tours = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                    console.log('✅ Tours loaded from GitHub API');
+                }
+            } else {
+                throw new Error('API failed');
+            }
+        } catch (e) {
+            console.warn('⚠️ GitHub API fail, falling back to raw URL for tours');
             const res = await fetch(`${BASE_URL}/tours.json?t=${timestamp}`);
             if (res.ok) tours = await res.json();
         }
 
-        // 1. Render Artists
+        // 4. Render Everything
         renderArtists(artists);
-
-        // 2. Render Stats
         renderStats(config);
+        renderPromos(config, artists);
 
-        // 3. Render Promos & Special Sections
-        renderPromos(config, artists); // Pass artists directly for random collage
-
-        // 4. Render Featured Tour
         if (config.featuredTourId) {
-          renderFeaturedTour(config.featuredTourId, tours);
+            renderFeaturedTour(config.featuredTourId, tours);
         }
 
-      } catch (error) {
-        console.error('❌ Error loading homepage data:', error);
+      } catch (err) {
+        console.error('❌ Homepage load error:', err);
         const grid = document.getElementById('artistsGrid');
         if (grid) {
           grid.innerHTML = `
@@ -368,7 +396,7 @@
                     <p style="color: var(--ph-gray-lighter); font-size: 0.9em;">
                         No se pudieron cargar los datos. Por favor, asegúrate de haber guardado los cambios en el Panel de Administración para sincronizar con la nube.
                         <br><br>
-                        <small>Detalle: ${error.message}</small>
+                        <small>Detalle: ${err.message}</small>
                     </p>
                 </div>
             `;

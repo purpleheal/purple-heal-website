@@ -406,7 +406,7 @@
                                     <input type="text" class="form-input" id="stat3Label" placeholder="Fans">
                                 </div>
                             </div>
-                            <button type="button" class="ph-button ph-button--outline section-save-btn" onclick="saveSection('stats')" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR ESTADISTICAS</button>
+                            <button type="button" class="ph-button ph-button--outline section-save-btn" data-section="stats" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR ESTADISTICAS</button>
                         </div>
 
                         <!-- JOIN SECTION TOGGLE -->
@@ -475,7 +475,7 @@
                                     style="margin-top: 10px; color: white; text-align: center; font-family: 'Oxanium';">
                                 </h4>
                             </div>
-                            <button type="button" class="ph-button ph-button--outline section-save-btn" onclick="saveSection('featuredTour')" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR TOUR DESTACADO</button>
+                            <button type="button" class="ph-button ph-button--outline section-save-btn" data-section="featuredTour" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR TOUR DESTACADO</button>
                         </div>
                     </div>
 
@@ -506,6 +506,7 @@
                                     <input type="text" class="form-input" id="backstageLink"
                                         placeholder="https://youtube.com/...">
                                 </div>
+                                <button type="button" class="ph-button ph-button--outline section-save-btn" data-section="backstage" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR BACKSTAGE</button>
                             </div>
 
                             <!-- Smart Promo Configuration -->
@@ -566,7 +567,7 @@
                                         aplicar descuento a esa categoria.</p>
                                 </div>
                             </div>
-                            <button type="button" class="ph-button ph-button--outline section-save-btn" onclick="saveSection('promos')" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR PROMOCIONES</button>
+                            <button type="button" class="ph-button ph-button--outline section-save-btn" data-section="promos" style="width: 100%; margin-top: 15px; padding: 10px;">💾 GUARDAR OFERTAS</button>
                         </div>
                     </div>
 
@@ -653,7 +654,6 @@
 
     <!-- Scripts -->
     <!-- Cloud CMS Initialization -->
-    <!-- Cloud CMS Initialization -->
     <script type="module">
         import ContentManager from './js/content-manager.js';
         import AuthManager from './js/auth-manager.js';
@@ -680,14 +680,8 @@
                     if (usersTab) usersTab.style.display = 'inline-block';
                 }
 
-                // Now initialize the admin panel UI
-                // (admin-panel.js functions should now use ContentManager methods exposed on window)
-                if (typeof window.initAdmin === 'function') {
-                    console.log('🚀 Calling initAdmin for Cloud CMS...');
-                    await window.initAdmin();
-                } else {
-                    console.error('❌ initAdmin function not found!');
-                }
+                // 2. Load Configuration and Initialize UI
+                await initializeHomePanel();
 
             } catch (error) {
                 console.error("🚨 CMS Init Failed:", error);
@@ -706,32 +700,20 @@
             }
         });
 
-        // Logout Binding
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                AuthManager.logout();
-            });
-        }
-    </script>
+        // Main Initialization
+        async function initializeHomePanel() {
+            // Hide Legacy Inputs
+            const tokenInputs = document.getElementById('githubToken');
+            if (tokenInputs) {
+                tokenInputs.disabled = true;
+                tokenInputs.placeholder = "Gestionado por Purple Security™";
+                tokenInputs.value = "";
+                if (document.getElementById('githubOwner')) document.getElementById('githubOwner').disabled = true;
+                if (document.getElementById('githubRepo')) document.getElementById('githubRepo').disabled = true;
+                if (document.getElementById('btnSaveToken')) document.getElementById('btnSaveToken').style.display = 'none';
+            }
 
-    <!-- Legacy Scripts (Order Matters) -->
-    <!-- storage-db.js removed (replaced by content-manager.js) -->
-    <!-- admin-auth.js removed (replaced by auth-manager.js) -->
-    <script src="js/github-api.js"></script>
-    <script src="js/inline-forms-helper.js"></script>
-    <script src="js/admin-panel.js?v=2.2"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', async () => {
-            // --- NEW CLOUD SYNC LOGIC ---
-            // The "Sync" button now uses the high-level Global Sync from ContentManager
-            // But we need to define what that button does if it still exists.
-
-            // For now, let's hide the manual token configuration forms since they are managed via Firestore
-            const configForm = document.querySelector('.ph-card__content');
-            // We might want to keep the "Sync Now" button but remove the inputs. 
-            // Let's just wire up the Sync Button to the new method if accessible.
-
+            // Sync Button logic
             const btnSync = document.getElementById('btnSyncNow');
             if (btnSync) {
                 btnSync.addEventListener('click', async () => {
@@ -739,125 +721,87 @@
                     btnSync.disabled = true;
                     btnSync.innerHTML = '⏳ SINCRONIZANDO...';
                     const statusEl = document.getElementById('syncStatus');
-                    if (statusEl) statusEl.innerText = 'Iniciando sincronización nube...';
-
                     try {
-                        // We use the original GithubSync.syncAll because ContentManager configured it!
                         if (window.GithubSync) {
-                            await window.GithubSync.syncAll((msg) => {
-                                if (statusEl) statusEl.innerText = msg;
-                            });
+                            await window.GithubSync.syncAll(msg => { if (statusEl) statusEl.innerText = msg; });
                             btnSync.innerHTML = '✅ LISTO';
                             if (statusEl) statusEl.innerText = 'Sincronización Exitosa.';
-                        } else {
-                            throw new Error("GithubSync no disponible");
                         }
                     } catch (e) {
-                        console.error(e);
                         btnSync.innerHTML = '❌ ERROR';
                         if (statusEl) statusEl.innerText = 'Error: ' + e.message;
                     } finally {
-                        setTimeout(() => {
-                            btnSync.innerHTML = originalText;
-                            btnSync.disabled = false;
-                        }, 3000);
+                        setTimeout(() => { btnSync.innerHTML = originalText; btnSync.disabled = false; }, 3000);
                     }
                 });
             }
 
-            // Hide Manual Token Inputs (They are obsolete)
-            const tokenInputs = document.getElementById('githubToken');
-            if (tokenInputs) {
-                // Find container to hide? 
-                // Let's just disable them to show they are managed securely
-                tokenInputs.disabled = true;
-                tokenInputs.placeholder = "Gestionado por Purple Security™";
-                tokenInputs.value = "";
-
-                const ownerInput = document.getElementById('githubOwner');
-                if (ownerInput) ownerInput.disabled = true;
-
-                const repoInput = document.getElementById('githubRepo');
-                if (repoInput) repoInput.disabled = true;
-
-                const saveBtn = document.getElementById('btnSaveToken');
-                if (saveBtn) saveBtn.style.display = 'none';
-            }
-            // --- END NEW LOGIC ---
-
-            // Auth Check logic removed (handled above or by ContentManager)
-            // Logout logic removed (handled above by AuthManager)
-
-
-
-            // Load Data using ContentManager (FETCH FROM GITHUB)
+            // Load Data
             let loadedTours = [];
             try {
-                if (!window.ContentManager) throw new Error("ContentManager no cargado");
-
-                // Actually fetch from GitHub
-                const config = await window.ContentManager.getSiteConfig();
-                loadedTours = await window.ContentManager.getTours();
-                window._currentConfig = config; // Store for section saves
-
-                // Populate Tours Dropdown
-                const select = document.getElementById('featuredTourSelect');
-                if (select) {
-                    loadedTours.forEach(tour => {
-                        const option = document.createElement('option');
-                        option.value = tour.id;
-                        option.textContent = tour.title;
-                        select.appendChild(option);
-                    });
-                }
-
-                // Populate Form
-                console.log('🔧 Loaded Config (Cloud):', config);
-
-                if (config) {
-                    const getEl = (id) => document.getElementById(id);
-                    if (getEl('showStats')) getEl('showStats').checked = !!config.showStats;
-                    if (getEl('showJoinSection')) getEl('showJoinSection').checked = config.showJoinSection !== false;
-                    if (getEl('showContact')) getEl('showContact').checked = config.showContact !== false;
-                    if (getEl('showStore')) getEl('showStore').checked = !!config.showStore;
-
-                    // Promos
-                    if (getEl('showBackstage')) getEl('showBackstage').checked = config.showBackstage || false;
-                    if (getEl('backstageLink')) getEl('backstageLink').value = config.backstageLink || '';
-                    if (getEl('showPromo')) getEl('showPromo').checked = config.showOffers || false;
-
-                    if (getEl('promoTitle')) getEl('promoTitle').value = config.promoTitle || '';
-                    if (getEl('promoSubtitle')) getEl('promoSubtitle').value = config.promoSubtitle || '';
-                    if (getEl('promoDescription')) getEl('promoDescription').value = config.promoDescription || '';
-
-                    if (getEl('promoDiscountAlbum')) getEl('promoDiscountAlbum').value = config.promoDiscountAlbum || '';
-                    if (getEl('promoDiscountMerch')) getEl('promoDiscountMerch').value = config.promoDiscountMerch || '';
-
-                    // Stats
-                    if (config.stats && config.stats.length === 3) {
-                        if (getEl('stat1Num')) getEl('stat1Num').value = config.stats[0].number;
-                        if (getEl('stat1Label')) getEl('stat1Label').value = config.stats[0].label;
-                        if (getEl('stat2Num')) getEl('stat2Num').value = config.stats[1].number;
-                        if (getEl('stat2Label')) getEl('stat2Label').value = config.stats[1].label;
-                        if (getEl('stat3Num')) getEl('stat3Num').value = config.stats[2].number;
-                        if (getEl('stat3Label')) getEl('stat3Label').value = config.stats[2].label;
-                    }
-
-                    // Featured Tour
-                    if (config.featuredTourId && select) {
-                        select.value = config.featuredTourId;
-                        updatePreview(config.featuredTourId, loadedTours);
-                    }
-                }
-
-                // Preview Listener
-                if (select) select.addEventListener('change', (e) => updatePreview(e.target.value, loadedTours));
-
+                const config = await ContentManager.getSiteConfig();
+                loadedTours = await ContentManager.getTours();
+                populateForm(config, loadedTours);
             } catch (err) {
                 console.error('Error loading config:', err);
             }
 
-            // AUTO-SAVE TOGGLES: Save immediately when any switch is toggled
+            // Setup Event Listeners
+            setupToggleListeners();
+            setupSubmitHandler();
+            setupSectionSaveButtons();
+        }
+
+        // --- HELPERS ---
+
+        function populateForm(config, tours) {
+            const getEl = (id) => document.getElementById(id);
+            const select = getEl('featuredTourSelect');
+
+            // Tours Dropdown
+            if (select) {
+                select.innerHTML = '<option value="">-- Seleccionar Tour --</option>';
+                tours.forEach(tour => {
+                    const option = document.createElement('option');
+                    option.value = tour.id;
+                    option.textContent = tour.title;
+                    select.appendChild(option);
+                });
+                if (config.featuredTourId) {
+                    select.value = config.featuredTourId;
+                    updatePreview(config.featuredTourId, tours);
+                }
+                select.addEventListener('change', (e) => updatePreview(e.target.value, tours));
+            }
+
+            if (!config) return;
+
+            // Simple Toggles
+            ['showStats', 'showJoinSection', 'showContact', 'showStore', 'showBackstage'].forEach(id => {
+                const el = getEl(id);
+                if (el) el.checked = id === 'showStats' || id === 'showStore' || id === 'showBackstage' ? !!config[id] : config[id] !== false;
+            });
+            if (getEl('showPromo')) getEl('showPromo').checked = config.showOffers || false;
+
+            // Inputs
+            if (getEl('backstageLink')) getEl('backstageLink').value = config.backstageLink || '';
+            if (getEl('promoTitle')) getEl('promoTitle').value = config.promoTitle || '';
+            if (getEl('promoSubtitle')) getEl('promoSubtitle').value = config.promoSubtitle || '';
+            if (getEl('promoDescription')) getEl('promoDescription').value = config.promoDescription || '';
+            if (getEl('promoDiscountAlbum')) getEl('promoDiscountAlbum').value = config.promoDiscountAlbum || '';
+            if (getEl('promoDiscountMerch')) getEl('promoDiscountMerch').value = config.promoDiscountMerch || '';
+
+            // Stats
+            if (config.stats && config.stats.length === 3) {
+                config.stats.forEach((s, i) => {
+                    const idx = i + 1;
+                    if (getEl(`stat${idx}Num`)) getEl(`stat${idx}Num`).value = s.number;
+                    if (getEl(`stat${idx}Label`)) getEl(`stat${idx}Label`).value = s.label;
+                });
+            }
+        }
+
+        function setupToggleListeners() {
             const toggleIds = ['showStats', 'showJoinSection', 'showStore', 'showContact', 'showBackstage', 'showPromo'];
             toggleIds.forEach(id => {
                 const el = document.getElementById(id);
@@ -865,36 +809,62 @@
                     el.addEventListener('change', async () => {
                         try {
                             const fullConfig = buildFullConfig();
-                            await window.ContentManager.saveConfig(fullConfig);
+                            await ContentManager.saveConfig(fullConfig);
                             showMsg(`✅ ${el.checked ? 'Activado' : 'Desactivado'} correctamente.`, 'success');
                         } catch (err) {
-                            console.error('Toggle save error:', err);
-                            showMsg('Error guardando: ' + err.message, 'error');
+                            handleSaveError(err);
                         }
                     });
                 }
             });
+        }
 
-            // Save Handler
-            document.getElementById('homeConfigForm').addEventListener('submit', async (e) => {
+        function setupSubmitHandler() {
+            const form = document.getElementById('homeConfigForm');
+            if (!form) return;
+            form.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const btn = e.target.querySelector('button[type="submit"]');
-                btn.textContent = 'GUARDANDO...';
+                const btn = form.querySelector('button[type="submit"]');
+                const originalText = btn.textContent;
+                btn.textContent = '⏳ GUARDANDO...';
+                btn.disabled = true;
 
                 try {
                     const newConfig = buildFullConfig();
-                    await window.ContentManager.saveConfig(newConfig);
+                    await ContentManager.saveConfig(newConfig);
                     showMsg('✅ ¡Configuración guardada!', 'success');
-                    btn.textContent = 'GUARDAR CAMBIOS';
                 } catch (saveErr) {
-                    console.error(saveErr);
-                    showMsg('Error al guardar: ' + saveErr.message, 'error');
-                    btn.textContent = 'GUARDAR CAMBIOS';
+                    handleSaveError(saveErr);
+                } finally {
+                    btn.textContent = originalText;
+                    btn.disabled = false;
                 }
             });
-        });
+        }
 
-        // HELPER: Build full config object from form
+        function setupSectionSaveButtons() {
+            document.querySelectorAll('.section-save-btn').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const section = btn.getAttribute('data-section');
+                    const originalText = btn.textContent;
+                    btn.textContent = '⏳ GUARDANDO...';
+                    btn.disabled = true;
+
+                    try {
+                        const fullConfig = buildFullConfig();
+                        await ContentManager.saveConfig(fullConfig);
+                        showMsg(`✅ Sección ${section} guardada.`, 'success');
+                        btn.textContent = '✅ GUARDADO';
+                        setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
+                    } catch (err) {
+                        handleSaveError(err);
+                        btn.textContent = originalText;
+                        btn.disabled = false;
+                    }
+                });
+            });
+        }
+
         function buildFullConfig() {
             return {
                 showStats: document.getElementById('showStats').checked,
@@ -918,43 +888,31 @@
             };
         }
 
-        // HELPER: Save a specific section
-        async function saveSection(section) {
-            const btn = event.target;
-            const originalText = btn.textContent;
-            btn.textContent = '⏳ GUARDANDO...';
-            btn.disabled = true;
-
-            try {
-                const fullConfig = buildFullConfig();
-                await window.ContentManager.saveConfig(fullConfig);
-                showMsg(`✅ Sección guardada correctamente.`, 'success');
-                btn.textContent = '✅ GUARDADO';
-                setTimeout(() => { btn.textContent = originalText; btn.disabled = false; }, 2000);
-            } catch (err) {
-                console.error('Section save error:', err);
-                showMsg('Error: ' + err.message, 'error');
-                btn.textContent = originalText;
-                btn.disabled = false;
+        function handleSaveError(err) {
+            console.error('Save error:', err);
+            let msg = 'Error al guardar. ';
+            if (err.message && err.message.includes('401')) {
+                msg += 'Tu sesión o token de GitHub ha expirado. <a href="fix-permissions.html" style="color:white; text-decoration: underline;">Haz clic aquí para arreglarlo</a>.';
+            } else {
+                msg += err.message || 'Error desconocido.';
             }
+            showMsg(msg, 'error');
         }
 
-        // HELPER: Show message
         function showMsg(text, type) {
             const msgEl = document.getElementById('formMessage');
+            if (!msgEl) return;
             const color = type === 'success' ? '#2ecc71' : '#e74c3c';
             const bg = type === 'success' ? 'rgba(46, 204, 113, 0.1)' : 'rgba(231, 76, 60, 0.1)';
             msgEl.innerHTML = `<div style="padding: 12px; text-align: center; border: 1px solid ${color}; background: ${bg}; color: ${color}; border-radius: 8px; margin-bottom: 15px;">${text}</div>`;
             msgEl.scrollIntoView({ behavior: 'smooth' });
-            setTimeout(() => { msgEl.innerHTML = ''; }, 3000);
+            if (type === 'success') setTimeout(() => { if (msgEl.innerHTML.includes('✅')) msgEl.innerHTML = ''; }, 3000);
         }
 
         function updatePreview(id, tours) {
             const preview = document.getElementById('tourPreview');
-            if (!id) {
-                preview.style.display = 'none';
-                return;
-            }
+            if (!preview) return;
+            if (!id) { preview.style.display = 'none'; return; }
             const tour = tours.find(t => String(t.id) === String(id));
             if (tour) {
                 document.getElementById('tourPreviewImg').src = tour.coverImage;
@@ -962,8 +920,12 @@
                 preview.style.display = 'block';
             }
         }
+
+        // Logout Binding
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) { logoutBtn.addEventListener('click', () => AuthManager.logout()); }
     </script>
-    <script src="js/github-api.js"></script> <!-- Required for Cloud CMS -->
+    <script src="js/github-api.js"></script>
 </body>
 
 </html>
