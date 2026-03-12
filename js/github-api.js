@@ -388,27 +388,13 @@ const GithubSync = {
             });
 
             // 4. Handle Images (Must act as Blobs)
-            const artistsToSync = JSON.parse(JSON.stringify(artists)); // Clone again just in case
+            const artistsToSync = JSON.parse(JSON.stringify(artists));
             let imageCount = 0;
 
-            // Auto-delete legacy static.yml workflow
-            if (progressCallback) progressCallback("Configurando GitHub Pages...");
-            try {
-                // 1. Connection Test (This is now handled by treeItems.push above)
-                // await GithubSync.uploadFile('connection_test.txt', 'GitHub Connection OK', 'docs: connection test');
-
-                // 2. .nojekyll (CRITICAL for valid deployment) (This is now handled by treeItems.push above)
-                // await GithubSync.uploadFile('.nojekyll', '', 'chore: add .nojekyll to bypass jekyll build');
-
-                // 3. Remove Legacy Workflow if exists (Fix for 'Get Pages site failed')
-                if (progressCallback) progressCallback("Limpiando configuraciones antiguas...");
-                await GithubSync.deleteFile('.github/workflows/static.yml', 'chore: remove conflicting workflow');
-
-            } catch (e) {
-                console.warn("Non-fatal config warning:", e);
-                // throw new Error("El token NO tiene permisos de escritura. Error: " + e.message);
-                // Allow proceed even if delete fails (e.g. 404)
-            }
+            if (progressCallback) progressCallback("Procesando archivos...");
+            
+            // NOTE: We removed the redundant .github/workflows/static.yml deletion as it's typically already gone.
+            // If needed, it can be run manually via recovery tools.
             for (const artist of artistsToSync) {
                 if (artist.imageData) {
                     if (progressCallback) progressCallback(`Procesando imagen de ${artist.name}...`);

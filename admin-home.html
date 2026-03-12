@@ -713,7 +713,12 @@
                 const config = window.GithubSync.getConfig();
                 if (document.getElementById('githubOwner')) document.getElementById('githubOwner').value = config.OWNER || '';
                 if (document.getElementById('githubRepo')) document.getElementById('githubRepo').value = config.REPO || '';
-                // Token is password field, don't auto-fill for security unless explicitly requested
+                
+                // Pre-fill token if available (User requested persistence)
+                const storedToken = localStorage.getItem('ph_github_token');
+                if (storedToken && document.getElementById('githubToken')) {
+                    document.getElementById('githubToken').value = storedToken;
+                }
             }
             
             // Setup Token Save Button logic

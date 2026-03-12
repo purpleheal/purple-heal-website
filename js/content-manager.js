@@ -23,37 +23,50 @@ const ContentManager = {
 
                     // 1. Get Role (with fallback to sessionStorage)
                     let role = sessionStorage.getItem('ph_user_role') || 'editor';
-                    try {
-                        const firestoreRole = await AuthManager.getUserRole(user.email);
-                        if (firestoreRole) role = firestoreRole;
-                    } catch (roleErr) {
-                        console.warn("CMS: Firestore role read failed, using cached:", role);
+                    const firestoreFailed = sessionStorage.getItem('ph_firestore_failed');
+                    
+                    if (!firestoreFailed) {
+                        try {
+                            const firestoreRole = await AuthManager.getUserRole(user.email);
+                            if (firestoreRole) role = firestoreRole;
+                        } catch (roleErr) {
+                            console.warn("CMS: Firestore role read failed, using cached:", role);
+                            sessionStorage.setItem('ph_firestore_failed', 'true');
+                        }
+                    } else {
+                        console.log("CMS: Skipping Firestore role check (previous failure in session)");
                     }
 
                     // 2. Get Secrets (Token) with fallback to localStorage
-                    try {
-                        const secretsRef = doc(db, "config", "secrets");
-                        const secretsSnap = await getDoc(secretsRef);
+                    const secretsFailed = sessionStorage.getItem('ph_secrets_failed');
+                    if (!secretsFailed) {
+                        try {
+                            const secretsRef = doc(db, "config", "secrets");
+                            const secretsSnap = await getDoc(secretsRef);
 
-                        if (secretsSnap.exists()) {
-                            const secrets = secretsSnap.data();
-                            if (secrets.github_token) {
-                                console.log("CMS: GitHub Token loaded from Firestore.");
-                                if (window.GithubSync) {
-                                    window.GithubSync.setToken(secrets.github_token);
-                                    window.GithubSync.saveToken(secrets.github_token);
-                                    const currentConfig = window.GithubSync.getConfig();
-                                    currentConfig.OWNER = secrets.repo_owner || currentConfig.OWNER;
-                                    currentConfig.REPO = secrets.repo_name || currentConfig.REPO;
-                                    window.GithubSync.saveConfig(currentConfig);
+                            if (secretsSnap.exists()) {
+                                const secrets = secretsSnap.data();
+                                if (secrets.github_token) {
+                                    console.log("CMS: GitHub Token loaded from Firestore.");
+                                    if (window.GithubSync) {
+                                        window.GithubSync.setToken(secrets.github_token);
+                                        window.GithubSync.saveToken(secrets.github_token);
+                                        const currentConfig = window.GithubSync.getConfig();
+                                        currentConfig.OWNER = secrets.repo_owner || currentConfig.OWNER;
+                                        currentConfig.REPO = secrets.repo_name || currentConfig.REPO;
+                                        window.GithubSync.saveConfig(currentConfig);
+                                    }
                                 }
                             }
+                        } catch (secretsErr) {
+                            console.warn("CMS: Firestore secrets read failed:", secretsErr.message);
+                            sessionStorage.setItem('ph_secrets_failed', 'true');
+                            if (window.GithubSync && window.GithubSync.hasToken()) {
+                                console.log("CMS: Using cached GitHub Token from localStorage.");
+                            }
                         }
-                    } catch (secretsErr) {
-                        console.warn("CMS: Firestore secrets read failed:", secretsErr.message);
-                        if (window.GithubSync && window.GithubSync.hasToken()) {
-                            console.log("CMS: Using cached GitHub Token from localStorage.");
-                        }
+                    } else {
+                        console.log("CMS: Skipping Firestore secrets check (previous failure in session)");
                     }
 
                     resolve({ user, role });
