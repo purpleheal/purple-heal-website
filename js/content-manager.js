@@ -179,9 +179,9 @@ const ContentManager = {
             console.warn(`CMS: API fetch failed for ${path}, trying Raw...`, e);
         }
 
-        // Fallback: Raw URL (might be cached)
+        // Fallback: Raw URL (with cache busting to avoid CDN returning stale data)
         const config = window.GithubSync.getConfig();
-        const url = `https://raw.githubusercontent.com/${config.OWNER}/${config.REPO}/${config.BRANCH}/${path}`;
+        const url = `https://raw.githubusercontent.com/${config.OWNER}/${config.REPO}/${config.BRANCH}/${path}?t=${Date.now()}`;
         const res = await fetch(url);
         if (!res.ok) return [];
         return await res.json();
