@@ -22,11 +22,11 @@ const ContentManager = {
                     console.log(`CMS: Initializing for ${user.email}...`);
 
                     // 1. Get Role (non-fatal if it fails)
-                    let role = 'editor'; // Default fallback
+                    let role = sessionStorage.getItem('ph_user_role') || 'editor'; // Check cache first
                     try {
-                        role = await AuthManager.getUserRole(user.email) || 'editor';
+                        role = await AuthManager.getUserRole(user.email) || role;
                     } catch (roleErr) {
-                        console.warn("CMS: Could not fetch role from Firestore (permissions?), defaulting to 'editor':", roleErr.message);
+                        console.warn("CMS: Could not fetch role from Firestore, using cached/default:", role, roleErr.message);
                     }
 
                     // 2. Get Secrets (Token)
@@ -38,11 +38,12 @@ const ContentManager = {
                         if (secretsSnap.exists()) {
                             const secrets = secretsSnap.data();
                             if (secrets.github_token) {
-                                console.log("CMS: GitHub Token loaded securely.");
+                                console.log("CMS: GitHub Token loaded securely from Firestore.");
 
                                 // Inject into GithubSync
                                 if (window.GithubSync) {
                                     window.GithubSync.setToken(secrets.github_token);
+                                    window.GithubSync.saveToken(secrets.github_token); // PERSIST to localStorage
 
                                     // Update Config too if repo/owner changed in DB
                                     const currentConfig = window.GithubSync.getConfig();
@@ -60,6 +61,12 @@ const ContentManager = {
                         }
                     } catch (secretsErr) {
                         console.warn("CMS: Could not read secrets from Firestore:", secretsErr.message);
+                        // FALLBACK: Try localStorage cached token
+                        if (window.GithubSync && window.GithubSync.hasToken()) {
+                            console.log("CMS: Using cached GitHub Token from localStorage.");
+                        } else {
+                            console.error("CMS: No cached token available. GitHub operations will fail.");
+                        }
                     }
 
                     resolve({ user, role });
