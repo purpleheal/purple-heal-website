@@ -183,19 +183,42 @@
         document.addEventListener('DOMContentLoaded', async () => {
             await loadArtists();
 
-            // Check Join Section Visibility
+            // Check Join Section Visibility (Instant Cloud Update)
             try {
-                await initDB();
-                const config = await getSiteConfig();
-                const joinSection = document.getElementById('join-section');
+                const timestamp = Date.now();
+                const OWNER = 'PurpleHeal-Entertainment';
+                const REPO = 'purple-heal-website';
+                const BRANCH = 'master';
 
+                let config = {};
+                try {
+                    const apiUrl = `https://api.github.com/repos/${OWNER}/${REPO}/contents/data/site_config.json?ref=${BRANCH}`;
+                    const apiRes = await fetch(apiUrl, {
+                        headers: { 'Accept': 'application/vnd.github.v3+json' }
+                    });
+                    if (apiRes.ok) {
+                        const data = await apiRes.json();
+                        if (data && data.content) {
+                            config = JSON.parse(decodeURIComponent(escape(atob(data.content))));
+                            console.log('✅ Config loaded from GitHub API (Artists Page)');
+                        }
+                    } else {
+                        throw new Error('API failed');
+                    }
+                } catch (e) {
+                    console.warn('⚠️ GitHub API fail on Artists Page, falling back to storage layer');
+                    await initDB();
+                    config = await getSiteConfig();
+                }
+
+                const joinSection = document.getElementById('join-section');
                 if (joinSection) {
                     // Default to true if undefined (legacy compatibility)
                     const shouldShow = config.showJoinSection !== false;
                     joinSection.style.display = shouldShow ? 'block' : 'none';
                 }
             } catch (e) {
-                console.warn('Config load error:', e);
+                console.warn('Config load error on Artists page:', e);
             }
         });
     </script>

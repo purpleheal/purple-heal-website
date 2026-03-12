@@ -484,91 +484,101 @@
     }
 
     function renderPromos(config, artists) {
-      // Sections
+      // 1. Navigation / Store Toggle
+      const navShop = document.getElementById('nav-shop');
+      const navShopMobile = document.getElementById('nav-shop-mobile');
+      const hasStore = config.showStore === true;
+      if (navShop) navShop.style.display = hasStore ? 'inline-block' : 'none';
+      if (navShopMobile) navShopMobile.style.display = hasStore ? 'block' : 'none';
+
+      // 2. Backstage Section
       const backstageSection = document.getElementById('backstage-section');
       const backstageWrapper = document.getElementById('promo-backstage-wrapper');
-      const saleSection = document.getElementById('promo-sale-section');
-      const saleCard = document.getElementById('promo-sale');
-
-      // Backstage
-      if (config.showBackstage && backstageWrapper) {
-        backstageSection.style.display = 'block';
-        backstageWrapper.style.display = 'block';
+      if (backstageSection && backstageWrapper) {
+        const showBack = config.showBackstage === true;
+        backstageSection.style.display = showBack ? 'block' : 'none';
+        backstageWrapper.style.display = showBack ? 'block' : 'none';
         const btn = document.getElementById('btn-backstage');
         if (btn) btn.href = config.backstageLink || '#';
       }
 
-      // Contact
+      // 3. Contact Section
       const contactSection = document.getElementById('contact');
       if (contactSection) {
         const showContact = config.showContact !== false;
         contactSection.style.display = showContact ? 'block' : 'none';
       }
 
-      // Sale Promo
-      if (config.showPromo && saleCard) {
-        saleSection.style.display = 'block';
-        saleCard.style.display = 'flex';
+      // 4. Sale Promo (Offers)
+      const saleSection = document.getElementById('promo-sale-section');
+      const saleCard = document.getElementById('promo-sale');
+      const showOffers = config.showOffers === true;
 
-        const btn = document.getElementById('btn-promo');
-        if (btn) btn.href = config.promoLink || 'shop.html';
+      if (saleSection && saleCard) {
+        if (showOffers) {
+            saleSection.style.display = 'block';
+            saleCard.style.display = 'flex';
+            
+            const btn = document.getElementById('btn-promo');
+            if (btn) btn.href = config.promoLink || 'shop.html';
 
-        const titleEl = document.getElementById('promo-title-main');
-        const subtitleEl = document.getElementById('promo-subtitle');
-        const descEl = document.getElementById('promo-desc');
+            const titleEl = document.getElementById('promo-title-main');
+            const subtitleEl = document.getElementById('promo-subtitle');
+            const descEl = document.getElementById('promo-desc');
 
-        const discAlbum = config.promoDiscountAlbum ? parseInt(config.promoDiscountAlbum) : 0;
-        const discMerch = config.promoDiscountMerch ? parseInt(config.promoDiscountMerch) : 0;
-        const maxDisc = Math.max(discAlbum, discMerch);
+            const discAlbum = config.promoDiscountAlbum ? parseInt(config.promoDiscountAlbum) : 0;
+            const discMerch = config.promoDiscountMerch ? parseInt(config.promoDiscountMerch) : 0;
+            const maxDisc = Math.max(discAlbum, discMerch);
 
-        if (titleEl && maxDisc > 0) {
-          titleEl.innerHTML = `${maxDisc}% <span style="color: var(--ph-blue-accent);">OFF</span>`;
-        } else if (titleEl && config.promoTitle) {
-          titleEl.textContent = config.promoTitle;
-        }
-
-        if (subtitleEl) {
-          if (config.promoSubtitle) {
-            subtitleEl.textContent = config.promoSubtitle;
-          } else {
-            if (discAlbum > 0 && discMerch > 0 && discAlbum === discMerch) {
-              subtitleEl.textContent = 'DESCUENTO EN TODOS LOS PRODUCTOS';
-            } else if (discAlbum > 0) {
-              subtitleEl.textContent = 'OFERTA EN ALBUMES';
-            } else if (discMerch > 0) {
-              subtitleEl.textContent = 'DESCUENTO EN MERCH';
-            } else {
-              subtitleEl.textContent = 'GRANDES OFERTAS';
+            if (titleEl && maxDisc > 0) {
+                titleEl.innerHTML = `${maxDisc}% <span style="color: var(--ph-blue-accent);">OFF</span>`;
+            } else if (titleEl && config.promoTitle) {
+                titleEl.textContent = config.promoTitle;
             }
-          }
-        }
 
-        if (descEl && config.promoDescription) {
-          descEl.textContent = config.promoDescription;
-        }
+            if (subtitleEl) {
+                if (config.promoSubtitle) {
+                    subtitleEl.textContent = config.promoSubtitle;
+                } else {
+                    if (discAlbum > 0 && discMerch > 0 && discAlbum === discMerch) {
+                        subtitleEl.textContent = 'DESCUENTO EN TODOS LOS PRODUCTOS';
+                    } else if (discAlbum > 0) {
+                        subtitleEl.textContent = 'OFERTA EN ALBUMES';
+                    } else if (discMerch > 0) {
+                        subtitleEl.textContent = 'DESCUENTO EN MERCH';
+                    } else {
+                        subtitleEl.textContent = 'GRANDES OFERTAS';
+                    }
+                }
+            }
 
-        // Random Products Collage
+            if (descEl && config.promoDescription) {
+                descEl.textContent = config.promoDescription;
+            }
+
+            // Products Collage
+            loadPromoCollage(artists);
+        } else {
+            saleSection.style.display = 'none';
+            saleCard.style.display = 'none';
+        }
+      }
+    }
+
+    function loadPromoCollage(artists) {
         try {
           if (artists && artists.length > 0) {
             let allProducts = [];
-            // Collect all products with images
             artists.forEach(artist => {
               if (artist.albums) {
                 artist.albums.forEach(album => {
-                  let img = null;
-                  if (album.images && album.images.length > 0) img = album.images[0];
-                  else if (album.cover) img = album.cover;
-                  else if (album.image) img = album.image;
-
+                  let img = (album.images && album.images.length > 0) ? album.images[0] : (album.cover || album.image);
                   if (img) allProducts.push({ img: img, type: 'album' });
                 });
               }
               if (artist.merch) {
                 artist.merch.forEach(item => {
-                  let img = null;
-                  if (item.images && item.images.length > 0) img = item.images[0];
-                  else if (item.image) img = item.image;
-
+                  let img = (item.images && item.images.length > 0) ? item.images[0] : item.image;
                   if (img) allProducts.push({ img: img, type: 'merch' });
                 });
               }
@@ -580,16 +590,7 @@
               imageContainer.innerHTML = '';
               if (bg) imageContainer.appendChild(bg);
 
-              let productsToShow = [];
-              if (allProducts.length > 0) {
-                productsToShow = shuffleArray(allProducts).slice(0, 3);
-              } else {
-                productsToShow = [
-                  { img: 'assets/images/placeholder.png' },
-                  { img: 'assets/images/placeholder.png' }
-                ];
-              }
-
+              let productsToShow = allProducts.length > 0 ? shuffleArray(allProducts).slice(0, 3) : [{ img: 'assets/images/placeholder.png' }, { img: 'assets/images/placeholder.png' }];
               imageContainer.className = `promo-products-container promo-count-${productsToShow.length}`;
 
               productsToShow.forEach((prod, i) => {
@@ -602,9 +603,8 @@
             }
           }
         } catch (e) {
-          console.error('Promo Logic Error:', e);
+          console.error('Promo Collage Error:', e);
         }
-      }
     }
 
     document.addEventListener('DOMContentLoaded', loadAllData);
