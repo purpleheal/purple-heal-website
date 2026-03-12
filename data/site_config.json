@@ -9,8 +9,8 @@
   "promoDescription": "",
   "promoDiscountAlbum": "",
   "promoDiscountMerch": "",
-  "showBackstage": false,
-  "backstageLink": "",
+  "showBackstage": true,
+  "backstageLink": "https://www.youtube.com/@purplehealent/featured",
   "stats": [
     {
       "number": "123+",
