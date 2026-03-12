@@ -1,7 +1,7 @@
 {
   "showStats": true,
   "showJoinSection": true,
-  "showContact": true,
+  "showContact": false,
   "showStore": true,
   "showOffers": true,
   "promoTitle": "OFERTAS DE VERANO",
@@ -25,5 +25,5 @@
       "label": ""
     }
   ],
-  "featuredTourId": "1"
+  "featuredTourId": null
 }
