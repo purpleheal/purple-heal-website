@@ -1,4 +1,4 @@
-﻿[
+[
   {
     "name": "ERRE 261",
     "genre": "trap/hiphop/rap/newjazz/surf",
@@ -12,19 +12,6 @@
       "tiktok": "https://www.tiktok.com/@r.nboi261?_r=1&_t=ZM-93E1C8dVkce"
     },
     "albums": [
-      {
-        "title": "ola del sur",
-        "releaseDate": "2026-02-11",
-        "year": "2026",
-        "price": 20,
-        "type": "EP",
-        "description": "jajajaja esta re piola",
-        "stock": "EN STOCK",
-        "link": "https://www.youtube.com/watch?v=wII1KSo3gQs",
-        "images": [
-          "https://raw.githubusercontent.com/purpleheal/purple-heal-website/master/assets/images/albums/erre-261-ola-del-sur-0-1773298076317.jpg"
-        ]
-      },
       {
         "title": "ola del sur 2",
         "releaseDate": "1221-03-12",

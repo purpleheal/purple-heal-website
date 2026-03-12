@@ -1,15 +1,15 @@
 {
   "showStats": true,
-  "showJoinSection": true,
-  "showContact": true,
-  "showStore": true,
-  "showOffers": true,
+  "showJoinSection": false,
+  "showContact": false,
+  "showStore": false,
+  "showOffers": false,
   "promoTitle": "OFERTAS DE VERANO",
   "promoSubtitle": "OFERTA EN ÁLBUMES Y MERCH",
   "promoDescription": "Los álbumes y merch de tus artistas favoritos ahora con descuento especial. Aprovecha esta oportunidad.",
-  "promoDiscountAlbum": "20",
-  "promoDiscountMerch": "20",
-  "showBackstage": true,
+  "promoDiscountAlbum": "0",
+  "promoDiscountMerch": "0",
+  "showBackstage": false,
   "backstageLink": "https://www.youtube.com/@purplehealent/featured",
   "stats": [
     {
@@ -25,5 +25,5 @@
       "label": ""
     }
   ],
-  "featuredTourId": "1"
+  "featuredTourId": null
 }
