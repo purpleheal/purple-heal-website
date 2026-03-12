@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>🔧 Fix Permissions - Purple Heal</title>
+    <style>
+        body { background: #0a0a0a; color: #eee; font-family: sans-serif; padding: 40px; max-width: 700px; margin: 0 auto; }
+        h1 { color: #9b59b6; }
+        .status { padding: 15px; border-radius: 8px; margin: 15px 0; }
+        .ok { background: rgba(39,174,96,0.2); border: 1px solid #27ae60; }
+        .fail { background: rgba(231,76,60,0.2); border: 1px solid #e74c3c; }
+        .info { background: rgba(52,152,219,0.2); border: 1px solid #3498db; }
+        button { background: #9b59b6; color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-size: 16px; margin: 5px; }
+        button:hover { background: #8e44ad; }
+        input { width: 100%; padding: 10px; background: #1a1a2e; border: 1px solid #9b59b6; color: white; border-radius: 8px; font-size: 14px; box-sizing: border-box; margin: 10px 0; }
+        code { background: #1a1a2e; padding: 2px 6px; border-radius: 4px; color: #e74c3c; }
+        #log { background: #0d0d1a; padding: 15px; border-radius: 8px; border: 1px solid #333; white-space: pre-wrap; font-family: monospace; font-size: 12px; max-height: 300px; overflow-y: auto; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Reparar Permisos del Panel</h1>
+    <p>Esta herramienta diagnostica y repara problemas de permisos del panel de administración.</p>
+    
+    <div id="results"></div>
+
+    <h2>Paso 1: Diagnosticar</h2>
+    <button onclick="diagnose()">🔍 DIAGNOSTICAR AHORA</button>
+
+    <h2>Paso 2: Reparar Token de GitHub</h2>
+    <p>Si Firestore no puede entregar el token, pégalo aquí manualmente.<br>
+    Lo encuentras en Firebase Console → Firestore → <code>config/secrets</code> → campo <code>github_token</code></p>
+    <input type="text" id="manualToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx">
+    <button onclick="saveManualToken()">💾 GUARDAR TOKEN MANUALMENTE</button>
+
+    <h2>Paso 3: Forzar Rol Admin</h2>
+    <button onclick="forceAdminRole()">👑 FORZAR ROL ADMIN EN CACHE</button>
+
+    <div id="log"></div>
+
+    <script type="module">
+        import { auth, db } from './js/firebase-config.js';
+        import { doc, getDoc } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+        import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-auth.js";
+
+        const log = document.getElementById('log');
+        const results = document.getElementById('results');
+
+        function addLog(msg) {
+            log.textContent += msg + '\n';
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function addResult(msg, type) {
+            results.innerHTML += `<div class="status ${type}">${msg}</div>`;
+        }
+
+        window.diagnose = async function() {
+            results.innerHTML = '';
+            log.textContent = '';
+            addLog('=== DIAGNOSTICO INICIADO ===');
+
+            // 1. Check Firebase Auth
+            addLog('1. Verificando Firebase Auth...');
+            const user = auth.currentUser;
+            if (user) {
+                addResult(`✅ Firebase Auth: Logueado como <strong>${user.email}</strong>`, 'ok');
+                addLog('   OK: ' + user.email);
+            } else {
+                addResult('❌ Firebase Auth: No hay sesión activa. Abre admin-login.html primero.', 'fail');
+                addLog('   FAIL: No user');
+                return;
+            }
+
+            // 2. Check Firestore Role
+            addLog('2. Verificando rol en Firestore (users/' + user.email + ')...');
+            try {
+                const userDoc = await getDoc(doc(db, "users", user.email));
+                if (userDoc.exists()) {
+                    const role = userDoc.data().role;
+                    addResult(`✅ Firestore Role: <strong>${role}</strong>`, 'ok');
+                    addLog('   OK: role = ' + role);
+                    sessionStorage.setItem('ph_user_role', role);
+                } else {
+                    addResult('⚠️ Firestore: Documento de usuario no encontrado', 'fail');
+                    addLog('   FAIL: Document not found');
+                }
+            } catch (e) {
+                addResult(`❌ Firestore Role: <strong>${e.message}</strong><br>→ Las reglas de seguridad de Firestore están bloqueando la lectura.`, 'fail');
+                addLog('   ERROR: ' + e.message);
+            }
+
+            // 3. Check Firestore Secrets
+            addLog('3. Verificando secrets en Firestore (config/secrets)...');
+            try {
+                const secretsDoc = await getDoc(doc(db, "config", "secrets"));
+                if (secretsDoc.exists()) {
+                    const data = secretsDoc.data();
+                    if (data.github_token) {
+                        addResult(`✅ GitHub Token: Encontrado (${data.github_token.length} caracteres)`, 'ok');
+                        addLog('   OK: Token length = ' + data.github_token.length);
+                        
+                        // AUTO-SAVE to localStorage!
+                        if (window.GithubSync) {
+                            window.GithubSync.setToken(data.github_token);
+                            window.GithubSync.saveToken(data.github_token);
+                            addResult('✅ Token guardado en localStorage automáticamente!', 'ok');
+                        } else {
+                            localStorage.setItem('ph_github_token', data.github_token);
+                            addResult('✅ Token guardado en localStorage (directo)!', 'ok');
+                        }
+                    } else {
+                        addResult('⚠️ El documento secrets existe pero github_token está vacío', 'fail');
+                    }
+                } else {
+                    addResult('⚠️ Documento config/secrets no encontrado', 'fail');
+                }
+            } catch (e) {
+                addResult(`❌ Firestore Secrets: <strong>${e.message}</strong><br>→ No se puede leer el token de GitHub.`, 'fail');
+                addLog('   ERROR: ' + e.message);
+            }
+
+            // 4. Check localStorage
+            addLog('4. Verificando localStorage...');
+            const cachedToken = localStorage.getItem('ph_github_token');
+            if (cachedToken) {
+                addResult(`✅ Token en localStorage: SÍ (${cachedToken.length} chars)`, 'ok');
+            } else {
+                addResult('❌ Token en localStorage: NO - El panel no podrá guardar cambios', 'fail');
+            }
+
+            // 5. Check sessionStorage role
+            const cachedRole = sessionStorage.getItem('ph_user_role');
+            if (cachedRole) {
+                addResult(`✅ Rol en caché: <strong>${cachedRole}</strong>`, 'ok');
+            } else {
+                addResult('❌ Rol en caché: NO - La pestaña USUARIOS no aparecerá', 'fail');
+            }
+
+            addLog('=== DIAGNOSTICO COMPLETO ===');
+        }
+
+        window.saveManualToken = function() {
+            const token = document.getElementById('manualToken').value.trim();
+            if (!token) {
+                alert('Pega el token primero');
+                return;
+            }
+            localStorage.setItem('ph_github_token', token);
+            if (window.GithubSync) {
+                window.GithubSync.setToken(token);
+                window.GithubSync.saveToken(token);
+            }
+            addResult(`✅ Token guardado manualmente (${token.length} chars). Recarga el panel admin.`, 'ok');
+        }
+
+        window.forceAdminRole = function() {
+            sessionStorage.setItem('ph_user_role', 'admin');
+            addResult('✅ Rol "admin" forzado en sessionStorage. Recarga el panel admin.', 'ok');
+        }
+
+        // Auto-init auth listener
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                addLog('Firebase Auth detectado: ' + user.email);
+            } else {
+                addLog('No hay sesión de Firebase Auth activa.');
+            }
+        });
+    </script>
+
+    <!-- Load GithubSync for token helpers -->
+    <script src="js/github-api.js"></script>
+</body>
+</html>
