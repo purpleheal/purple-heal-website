@@ -359,11 +359,9 @@ function deleteArtist(index) {
         try {
             const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
             artists.splice(index, 1);
-            const success = await saveArtists(artists);
-            if (success) {
-                showToast('Artista eliminado de la nube.', 'success');
-                renderArtistsList(artists); // Optimistic update
-            }
+            await saveArtists(artists);
+            showToast('Artista eliminado de la nube.');
+            renderArtistsList(artists); // Optimistic update
         } catch (e) {
             console.error(e);
             showToast('Error eliminando artista', 'error');
@@ -885,11 +883,9 @@ function deleteAlbum(artistIndex, albumIndex) {
     showDeleteModal(async () => {
         const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
         artists[artistIndex].albums.splice(albumIndex, 1);
-        const success = await saveArtists(artists);
-        if (success) {
-            showToast('Album eliminado y cambios publicados.', 'success');
-            showArtistProfile(artists[artistIndex], artistIndex);
-        }
+        await saveArtists(artists);
+        showToast('Album eliminado y cambios publicados.');
+        showArtistProfile(artists[artistIndex], artistIndex);
     });
 }
 window.deleteAlbum = deleteAlbum;
@@ -899,11 +895,9 @@ function deleteMerch(artistIndex, productIndex) {
     showDeleteModal(async () => {
         const artists = (currentArtists && currentArtists.length > 0) ? currentArtists : await loadArtists();
         artists[artistIndex].merch.splice(productIndex, 1);
-        const success = await saveArtists(artists);
-        if (success) {
-            showToast('Producto eliminado y cambios publicados.', 'success');
-            showArtistProfile(artists[artistIndex], artistIndex);
-        }
+        await saveArtists(artists);
+        showToast('Producto eliminado y cambios publicados.');
+        showArtistProfile(artists[artistIndex], artistIndex);
     });
 }
 window.deleteMerch = deleteMerch;
