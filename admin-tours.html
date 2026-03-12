@@ -504,8 +504,7 @@
                     document.getElementById('adminPanel').classList.add('active');
                     const fallbackRole = sessionStorage.getItem('ph_user_role');
                     if (fallbackRole === 'admin') {
-                        const usersTab = document.getElementById('nav-users');
-                        if (usersTab) usersTab.style.display = 'inline-block';
+                        document.body.setAttribute('data-user-role', 'admin');
                     }
                     if (typeof window.initToursPage === 'function') {
                         await window.initToursPage();
