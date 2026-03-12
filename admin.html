@@ -644,20 +644,41 @@
                     await window.initAdmin();
                 }
 
-                // 4. Role Check
-                const currentUser = AuthManager.getCurrentUser();
-                if (currentUser) {
-                    const role = await AuthManager.getUserRole(currentUser.email);
-                    if (role === 'admin') {
-                        const usersTab = document.getElementById('nav-users');
-                        if (usersTab) usersTab.style.display = 'inline-block';
-                    }
+                // 4. Role Check - use cache to avoid Firestore failure
+                const cachedRole = sessionStorage.getItem('ph_user_role');
+                if (cachedRole === 'admin') {
+                    const usersTab = document.getElementById('nav-users');
+                    if (usersTab) usersTab.style.display = 'inline-block';
+                } else {
+                    // Try Firestore as fallback
+                    try {
+                        const currentUser = AuthManager.getCurrentUser();
+                        if (currentUser) {
+                            const role = await AuthManager.getUserRole(currentUser.email);
+                            if (role === 'admin') {
+                                const usersTab = document.getElementById('nav-users');
+                                if (usersTab) usersTab.style.display = 'inline-block';
+                            }
+                        }
+                    } catch (roleErr) { console.warn("Role check failed:", roleErr.message); }
                 }
 
             } catch (e) {
                 console.error("CMS Init Failed:", e);
                 if (e === "No user") {
                     window.location.href = 'admin-login.html';
+                } else {
+                    // Show panel anyway - don't hang forever
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('adminPanel').classList.add('active');
+                    if (typeof window.initAdmin === 'function') {
+                        await window.initAdmin();
+                    }
+                    const fallbackRole = sessionStorage.getItem('ph_user_role');
+                    if (fallbackRole === 'admin') {
+                        const usersTab = document.getElementById('nav-users');
+                        if (usersTab) usersTab.style.display = 'inline-block';
+                    }
                 }
             }
         });
