@@ -24,6 +24,32 @@
         "images": [
           "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/albums/erre-261-ola-del-sur-0-1773298076317.jpg"
         ]
+      },
+      {
+        "title": "ola del sur 2",
+        "releaseDate": "1221-03-12",
+        "year": "1221",
+        "price": 366,
+        "type": "EP",
+        "description": "asfasfasdasd",
+        "stock": "EN STOCK",
+        "link": "https://www.youtube.com/watch?v=wII1KSo3gQs",
+        "images": [
+          "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/albums/erre-261-ola-del-sur-2-0-1773298119689.jpg"
+        ]
+      },
+      {
+        "title": "ola del sur 3",
+        "releaseDate": "1212-03-12",
+        "year": "1212",
+        "price": 1234,
+        "type": "EP",
+        "description": "asdasdasd",
+        "stock": "EN STOCK",
+        "link": "https://www.youtube.com/watch?v=wII1KSo3gQs",
+        "images": [
+          "https://raw.githubusercontent.com/PurpleHeal-Entertainment/purple-heal-website/master/assets/images/albums/erre-261-ola-del-sur-3-0-1773298143687.jpg"
+        ]
       }
     ],
     "merch": [],
